@@ -18,13 +18,11 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //
 
-= DRAFT telgraf change request for KPGO 12m
+= DRAFT telegraf installation for KPGO 12m FS computers
 E. Himwich, C. Frock, C. Coughlin
-Version 0.2 - October 2020
+Version 0.3 - October 2020
 
 :sectnums:
-:experimental:
-:downarrow: &downarrow;
 
 :toc:
 == Introduction
@@ -37,18 +35,20 @@ operational installation. The one on *fs2* is there in case operations
 have to move to the *fs2* disks. It should be disabled on *fs2* until
 it is needed.
 
-
 The installation process uses the "Recoverable test" procedure of
 FSL10 to enable easy recovery in case of a problem. This has the
 advantage that if (i) steps are missing from the procedure or (ii)
 errors occur, and either or both can't be recovered from directly, it
 is relatively easy to return to the original state and start over.
 
-== Preparation
+== fs1 installation
 
-Working on the 12m *fs1* computer:
+All work in this section is to be performed on the KPGO 12m *fs1*
+computer.
 
-. Follow the directions for the recoverable test process at:
+=== Preparing fs1
+
+. Follow the directions for the recoverable test procedure at:
 
 +
 https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
@@ -62,20 +62,30 @@ installed yet, use the following command in its place:
 ====
 
 . Once the primary disk has been dropped from the RAID, move onto the
-next section. Later after testing has deemed to have been *successful*
-or *failed*, or needs to be aborted, the appropriate ending branch of
-the recoverable testing procedure should be used (see <<Finishing-up>>
-below)
+next section.
 
-== Installing telegraf
+[IMPORTANT]
+====
+If it is not possible finish the installation before the
+next operational use of the system or disk rotation, follow the
+*failed* branch of the procedure to return to the previous system
+configuration. It will require several hours for the refresh operation
+to complete. The system can be used for operations, but not a disk
+rotation, while the refresh is in progress. Later, the installation
+can be tried again from scratch when it is convenient.
 
-Working on the 12m *fs1* computer:
+Depending on where in the process the decision to revert the
+installation is made, it may necessary to move the MET4A and wind
+sensor serial connectors back to *fs1* as well.
+====
+
+=== Installing telegraf on fs1
 
 . Remove any previous installation of `telegraf`.
 
 . As `prog`:
 
-.. Create the local configuration directory on fs1:
+.. Create the local configuration directory:
 
 +
    cd /usr2/st
@@ -94,12 +104,13 @@ Working on the 12m *fs1* computer:
     systemctl restart telegraf
 +
 NOTE: The configuration file is already set with the correct alias, `12m`, for
-the 12m antenna. The metserver host is also properly set as `127.0.0.1`, the local host.
+the 12m antenna. The `metserver` host is also properly set as `127.0.0.1`, the local host.
 
+=== Testing telegraf on fs1
 
 . Verify that there are no errors for communication with the antenna by the FS and the ACI program.
 +
-If there are errors, disable `telegraf` antenna access:
+If there are errors, disable `telegraf` antenna access, as `root`:
 +
 .. Edit `/etc/telegraf.conf` and comment out the block:
 +
@@ -116,52 +127,100 @@ If there are errors, disable `telegraf` antenna access:
     systemctl restart telegraf
 
 
-. Verify there are no problems:
+. Verify there are no other problems:
 
-.. Check in `grafana` on the MAS to see if the antenna and met. data are updating.
+.. Check in `grafana` on the MAS to see if the antenna (if access wasn't already disabled) and met. data are updating.
 +
 .. A minimal test with the FS to assure that things are working would include:
 
 +
 
-... A pointing check, which should not be abnormal and should not have communication errors with the antenna.
+... A quick pointing check, which should not be abnormal and should not have communication errors with the antenna.
 
 +
 
 ... Using the `wx` command to verify met data is still available.
 
-. [[Finishing-up]]Finishing up
+== fs2 installation
+
+Once *fs1* has been successfully set-up, the *fs2* disks, running in
+the spare computer, can be set-up.  Do not proceed with this step until
+`telegraf` is working on *fs1*.
+
+=== Preparing fs2
+
+Follow the instructions in in the <<Preparing fs1>> section above, but this time doing them on *fs2*.
+
+=== Changes needed before installing telegraf on fs2
+
+For this part of the installation it will be necessary to take some additional steps:
+
+. Terminate the FS on *fs1*.
+. Stop `telegraf`, `metclient`, and `metserver` on *fs1*, as `root`:
+
+    systemctl stop telegraf
+    systemctl stop metclient
+    systemctl stop metserver
+
+. Move the serial connectors for the MET4A and wind sensors to the corresponding connectors on *fs2*.
+
+. Start `metserver` on *fs2*, as `root`:
 
 +
 
-Assess whether any additional steps taken beyond what was described
-above may cause problems. If so, they will need to be addressed.
+    systemctl start metserver
 
-.. If there are issues that can't be resolve before the system needs
-to be used for operations, the test can be aborted by following the
-*failed* branch of:
+. As `oper`, start the FS on *fs2* and verify that met data is being received with the command:
+
++
+    wx
+
+=== Installing telegraf on fs2
+
+Follow the directions in the <<Installing telegraf on fs1>> section above, but this time performing the steps on *fs2*.
+
+=== Testing telegraf on fs2
+
+Follow the directions in the <<Testing telegraf on fs1>> section above, but this time using *fs2*.
+
+NOTE: If `telegraf` antenna access had to be disabled on *fs1* to eliminate communication errors, it is expected that this will be needed on *fs2* as well.
+
+== Finishing up
+
+The sections covers the steps to follow once `telegraf` has been tested successfully on _both_ *fs1* and *fs2*
+
+=== Finalizing fs2
+
+. Terminate the FS on *fs2*.
+. Stop `telegraf` and `metserver` on *fs2*, as `root`:
+
+    systemctl stop telegraf
+    systemctl stop metserver
+
+. Disable `telegraf` on *fs2*, as `root`:
+
+    systemctl disable telegraf
+
+. Follow the *successful* steps in the recoverable test procedure:
+
 +
 https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
-+
-When ready, the testing can be restarted beginning with the
-<<Preparation>> section above,
 
-.. If and when everything is working, finalize the installation by following the *successful* branch of:
+=== Finalizing fs1
+
+. Move the serial connectors for the MET4A and wind sensors to the original connectors on *fs1*.
+. Start `metserver`, `telegraf` and `metclient` on *fs1*, as `root`:
+
+    systemctl start metserver
+    systemctl start telegraf
+    systemctl start metclient
+
+. Start the FS on *fs1*.
+. Repeat the second step (Verify there are no other problems) in <<Testing telegraf on fs1>>
+. If everything is still working, follow the *successful* steps in the recoverable test procedure:
+
 +
 https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
-
-== Setting-up fs2
-
-Once *fs1* has been successfully set-up, a truncated version of the
-same process can be followed for installing `telegraf` on *fs2*.
-Working with *fs2*, follow the steps in the <<Preparation>> and
-<<Installing telegraf>> sections. In the latter, stop after step 3 (as
-`root`) and then as `root` execute:
-
-     systemctl disable telegraf
-     systemctl stop telegraf
-
-Then finish with step 6.b in <<Finishing-up>>.
 
 == Appendix A. README file
 
