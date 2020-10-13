@@ -20,7 +20,7 @@
 
 = DRAFT telegraf installation for KPGO 12m FS computers
 E. Himwich, C. Frock, C. Coughlin
-Version 0.4 - October 2020
+Version 0.5 - October 2020
 
 :sectnums:
 
@@ -40,6 +40,21 @@ FSL10 to enable easy recovery in case of a problem. This has the
 advantage that if (i) steps are missing from the procedure or (ii)
 errors occur, and either or both can't be recovered from directly, it
 is relatively easy to return to the original state and start over.
+
+== Disabling data logger access from the MAS
+
+The `telegraf` installation on the FS computers will query the data
+logger. However, the `telegraf` on the MAS computer is already
+accessing the data logger.  This will need to be disabled on the MAS
+computer to avoid a conflict.  To disable accessing the data logger on
+the MAS computer, comment out the data logger lines in the `telegraf`
+configuration file on the MAS computer and restart `telegraf` there.
+
+If the installation needs to be reverted (see more details in section
+<<Preparing fs1>> below) you will need to re-enable data logger
+access on the MAS computer to return to the previous configuration. To
+do this, uncomment the relevant lines in the `telegraf` configuration
+file on the MAS computer and restart `telegraf` there.
 
 == fs1 installation
 
@@ -77,6 +92,11 @@ can be tried again from scratch when it is convenient.
 Depending on where in the process the decision to revert the
 installation is made, it may necessary to move the MET4A and wind
 sensor serial connectors back to *fs1* as well.
+
+When reverting the installation, you may also need to re-enable the
+data logger access on MAS, as described in section
+<<Disabling data logger access from the MAS>> above.
+
 ====
 
 === Installing telegraf on fs1
