@@ -1,0 +1,9 @@
+install:
+
+  root:
+    cd ~
+    wget https://github.com/nvi-inc/telegraf/releases/download/v1.14.2-vlbi-0.5.2/telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
+    dpkg -i telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
+    cp /usr2/st/telegraf.conf/telegraf.conf /etc/telegraf
+      (you may need to change which FS version is pinned)
+    systemctl restart telegraf
