@@ -20,7 +20,7 @@
 
 = DRAFT telegraf installation for KPGO 12m FS computers
 E. Himwich, C. Frock, C. Coughlin
-Version 0.5 - October 2020
+Version 0.6 - October 2020
 
 :sectnums:
 
@@ -41,6 +41,29 @@ advantage that if (i) steps are missing from the procedure or (ii)
 errors occur, and either or both can't be recovered from directly, it
 is relatively easy to return to the original state and start over.
 
+== Reverting the installation
+
+If it is not possible finish the installation before the next
+operational use of the system or disk rotation, the systems can be
+reverted to their previous configuration.  For each system
+that had the primary disk "dropped" follow the *failed* branch of
+the recoverable testing procedure at:
+
+https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
+
+It will require several hours for the refresh operation
+to complete. The system can be used for operations, but not a disk
+rotation, while the refresh is in progress. Later, the installation
+can be tried again from scratch when it is convenient.
+
+Depending on where in the process the decision to revert the
+installation is made, it may also be necessary to move the MET4A and wind
+sensor serial connectors back to *fs1*.
+
+When reverting the installation, you may also need to re-enable the
+data logger access on MAS, as described in section
+<<Disabling data logger access from the MAS>> below.
+
 == Disabling data logger access from the MAS
 
 The `telegraf` installation on the FS computers will query the data
@@ -51,7 +74,7 @@ the MAS computer, comment out the data logger lines in the `telegraf`
 configuration file on the MAS computer and restart `telegraf` there.
 
 If the installation needs to be reverted (see more details in section
-<<Preparing fs1>> below) you will need to re-enable data logger
+<<Reverting the installation>> above) you will need to re-enable data logger
 access on the MAS computer to return to the previous configuration. To
 do this, uncomment the relevant lines in the `telegraf` configuration
 file on the MAS computer and restart `telegraf` there.
@@ -78,26 +101,6 @@ installed yet, use the following command in its place:
 
 . Once the primary disk has been dropped from the RAID, move onto the
 next section.
-
-[IMPORTANT]
-====
-If it is not possible finish the installation before the
-next operational use of the system or disk rotation, follow the
-*failed* branch of the procedure to return to the previous system
-configuration. It will require several hours for the refresh operation
-to complete. The system can be used for operations, but not a disk
-rotation, while the refresh is in progress. Later, the installation
-can be tried again from scratch when it is convenient.
-
-Depending on where in the process the decision to revert the
-installation is made, it may necessary to move the MET4A and wind
-sensor serial connectors back to *fs1* as well.
-
-When reverting the installation, you may also need to re-enable the
-data logger access on MAS, as described in section
-<<Disabling data logger access from the MAS>> above.
-
-====
 
 === Installing telegraf on fs1
 
@@ -225,11 +228,6 @@ The sections covers the steps to follow once `telegraf` has been tested successf
 
     systemctl disable telegraf
 
-. Follow the *successful* steps in the recoverable test procedure:
-
-+
-https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
-
 === Finalizing fs1
 
 . Move the serial connectors for the MET4A and wind sensors to the original connectors on *fs1*.
@@ -240,8 +238,16 @@ https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
     systemctl start metclient
 
 . Start the FS on *fs1*.
-. Repeat the second step (Verify there are no other problems) in <<Testing telegraf on fs1>>
-. If everything is still working, follow the *successful* steps in the recoverable test procedure:
+. Reverify the second step (Verify there are no other problems) in <<Testing telegraf on fs1>>
+
+=== Restoring RAIDs
+
+If everything is still working, follow the *successful* steps in the recoverable test procedure, to recover the RAIDs on both *fs1* and *fs2*:
 
 +
 https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
+
+. Recover the RAID on *fs1*.
+
+. Recover the RAID on *fs2*.
+
