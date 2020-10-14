@@ -41,6 +41,32 @@ advantage that if (i) steps are missing from the procedure or (ii)
 errors occur, and either or both can't be recovered from directly, it
 is relatively easy to return to the original state and start over.
 
+== Combining with gromet installation
+
+It is possible to combine the installation of `telegraf` with that of
+`gromet`. The only downside of that is that if it is necessary to
+revert the installation during the `gromet` installation, the
+installed `telegraf` will be lost also. However, that should be fairly
+easy to recover on the next attempt.
+
+To combine the two installations:
+
+. Follow the steps in this document, down to, but _not_ including
+<<Restoring RAIDs>> section below.
+
+. Then skip to the `gromet` installation document. Follow all steps
+in that document except the 'Preparing fs1' and 'Preparing fs2'
+sections, which in some sense have already been.
+
++
+
+The 'Restoring RAIDs` section of the `gromet` installation
+document will complete that action for both the `telegraf` and
+`gromet` installations.
+
+If it is necessary to revert the combined installation, follow the
+steps in the <<Reverting the installation>> section below.
+
 == Reverting the installation
 
 If it is not possible finish the installation before the next
