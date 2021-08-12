@@ -1,0 +1,142 @@
+#!/bin/bash
+set -e
+
+usage() {
+cat <<EOF
+
+  Usage: `basename "$0"` [options] command
+  Configure 12m FS computer telegraf/gromet
+
+  command is full or partial
+
+  if no command then current state is shown.
+
+  Options:
+   -f   force change if state is unknown or already in that state
+        (use with care, may cause problems)
+   -h   print this message
+EOF
+}
+
+if ! [ $(id -u) = 0 ]; then
+  echo "This script must be run as root."
+  exit 1
+fi
+
+file=$(readlink -f /etc/telegraf/telegraf.conf)
+if [[ "$file" =~ ^/etc/telegraf/telegraf.conf.full$ ]]; then
+   state=full
+elif [[ "$file" =~ ^/etc/telegraf/telegraf.conf.partial$ ]]; then
+   state=partial
+else
+   state=unknown
+fi
+
+force=
+while getopts 'fh' opt; do
+    case $opt in
+        f)
+            force=1
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
+        *)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if [[ $# -eq 0 ]] ; then
+    echo "state is $state"
+    exit 0
+fi
+
+cmd=$1
+
+if [[ ! "$cmd" =~ ^(full|partial)$ ]]; then
+   echo "command must be full or partial, was: $cmd"
+   exit 1
+fi
+
+if [[ "$state" =~ "$cmd" ]]; then
+    if [[ -z "$force" ]] ; then
+        echo "already in $state, use -f to force recommanding"
+        exit 1
+     fi
+fi
+
+if [[ "$state" =~ "unknown" ]]; then
+    if [[ -z "$force" ]] ; then
+         echo "Can't change unknown state without -f"
+         exit 1
+    fi
+fi
+
+
+if [[ "$cmd" =~ ^full$ ]]; then
+    echo -n "  Did you set the other computer to partial first? (y=yes, n=no) : "
+    badans=true
+    while [ "$badans" = "true" ]
+    do
+      read ans
+      case "$ans" in
+        y|yes) echo "  O.K. Setting to full ... "
+               badans=false
+               ;;
+        n|no)  echo "  Please do that first."
+               exit
+               ;;
+        *)     echo -n "  Please answer with y=yes or n=no : "
+      esac
+    done
+
+    echo "  Starting gromet"
+    systemctl start gromet
+
+    echo "  Enabling gromet"
+    systemctl enable gromet
+
+#    echo "  Starting metclient"
+#    systemctl start metclient
+
+#    echo "  Enabling metclient"
+#    systemctl enable metclient
+
+    echo "  Changing directory to /etc/telegraf"
+    cd /etc/telegraf
+
+    echo "  Linking telegraf.conf to telegraf.conf.full"
+    ln -sfn telegraf.conf.full telegraf.conf
+
+    echo "  Restarting telegraf"
+    systemctl restart telegraf
+else
+    echo "  Setting to partial ..."
+
+#    echo "  Stopping metclient"
+#    systemctl stop metclient
+
+#    echo "  Disabling metclient"
+#    systemctl disable metclient
+
+    echo "  Stopping gromet"
+    systemctl stop gromet
+
+    echo "  Disabling gromet"
+    systemctl disable gromet
+
+    echo "  Changing directory to /etc/telegraf"
+    cd /etc/telegraf
+
+    echo "  Linking telegraf.conf to telegraf.conf.partial"
+    ln -fsn telegraf.conf.partial telegraf.conf
+
+    echo "  Restarting telegraf"
+    systemctl restart telegraf
+fi
+
+echo "  Done."
