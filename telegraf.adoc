@@ -22,7 +22,7 @@
 
 = DRAFT telegraf installation for FS computers
 E. Himwich, C. Frock, C. Coughlin, K. Imai
-Version 1.0 - August 2021
+Version 1.1 - August 2021
 
 :sectnums:
 
@@ -175,20 +175,21 @@ next step, <<Installing telegraf on fs1>>, below.
 
 +
 
-A listing of _README_ is available in appendix <<Listing of README>>.
+A pointer to an example _README_ file and a listing of it is provided
+in the appendix <<README file>>.
 
 +
 
 +
 
-The _telegraf.conf_ file for _fs1_ is listed in the appendix
-<<Listing of fs1 telegraf.conf>>.
+A pointer to an example _telegraf.conf_ file for _fs1_ and a listing
+of it is provided in the appendix <<fs1 telegraf.conf file>>.
 
 +
 
 NOTE: If you are using the directions to install _telegraf_ on _fs2_,
-the listing for that machine is in the appendix
-<<Listing of fs2 telegraf.conf>>.
+a pointer an example file for that machine and a listing of it are
+provided in the appendix <<fs2 telegraf.conf file>>.
 
 . As _root_:
 
@@ -501,8 +502,9 @@ script will need to be uncommented.
   cp OLD/telegraf.conf telegraf.conf.full
 
 . When working on _fs1_, place a copy of the _fs1_ version of
-_telegraf.conf.partial_ (a listing is available in appendix
-<<Listing of fs1 telegraf.conf.partial>>) in _/etc/telegraf/_.
+_telegraf.conf.partial_ (a pointer to an example and a listing of it
+is provided in the appendix <<fs1 telegraf.conf.partial file>>) in
+_/etc/telegraf/_.
 
 +
 
@@ -514,9 +516,9 @@ _telegraf.conf.partial_ to agree with your _telegraf.conf.full_.
 [NOTE]
 ====
 
-If you are using these directions to install on _fs2_, relevant
-listing for _telegraf.conf.partial_ is the one in the appendix
-<<Listing of fs2 telegraf.conf.partial>>.
+If you are using these directions to install on _fs2_, a pointer to an
+example _telegraf.conf.partial_ for that machine and a listing of it
+are provided in the appendix <<fs2 telegraf.conf.partial file>>.
 
 TIP: You may want to update the address for the _metserver_ in
 _telegraf.conf.partial_ to agree with your _telegraf.conf.full_.
@@ -543,15 +545,15 @@ When working on _fs2_, instead, use:
 
 The directions for _fs2_ are identical to the ones for _fs1_, except:
 
-* all work is performed on _fs2_
+* All work is performed on _fs2_
 
-* the relevant listing for _telegraf.conf.partial is the one in the
-appendix <<Listing of fs2 telegraf.conf.partial>>
+* The information for the relevant _telegraf.conf.partial_ file is the
+one in the appendix <<fs2 telegraf.conf.partial file>>
 
 * The symbolic link is set to point to _telegraf.conf.partial_.
 
 Please follow the directions in <<fs1 set_telegraf installation>> with
-those changes, which are **NOTE**d, then proceed to step
+those changes, which are **NOTE**d there, then proceed to the step
 <<Testing set_telegraf>> below.
 
 === Testing set_telegraf
@@ -610,7 +612,11 @@ https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing
 
 [appendix]
 
-= Listing of README
+= README file
+
+An example can be found in the file _README_ at:
+https://github.com/nvi-inc/telegraf_install. A listing is provided
+below.
 
 ....
 install:
@@ -842,7 +848,11 @@ echo "  Done."
 
 [appendix]
 
-= Listing of fs1 telegraf.conf
+= fs1 telegraf.conf file
+
+An example can be found in the file _fs1/telegraf.conf_ at:
+https://github.com/nvi-inc/telegraf_install. A listing is provided
+below.
 
 ....
 # Telegraf Configuration
@@ -1128,7 +1138,11 @@ version = "10.0.0-beta1"
 
 [appendix]
 
-= Listing of fs1 telegraf.conf.partial
+= fs1 telegraf.conf.partial file
+
+An example can be found in the file _fs1/telegraf.conf.partial_ at:
+https://github.com/nvi-inc/telegraf_install. A listing is provided
+below.
 
 ....
 # Telegraf Configuration
@@ -1414,7 +1428,11 @@ ignore_fs = ["tmpfs", "devtmpfs"]
 
 [appendix]
 
-= Listing of fs2 telegraf.conf
+= fs2 telegraf.conf file
+
+An example can be found in the file _fs2/telegraf.conf_ at:
+https://github.com/nvi-inc/telegraf_install. A listing is provided
+below.
 
 ....
 # Telegraf Configuration
@@ -1700,8 +1718,11 @@ version = "10.0.0-beta1"
 
 [appendix]
 
-= Listing of fs2 telegraf.conf.partial
+= fs2 telegraf.conf.partial file
 
+An example can be found in the file _fs2/telegraf.conf.partial_ at:
+https://github.com/nvi-inc/telegraf_install. A listing is provided
+below.
 ....
 # Telegraf Configuration
 #
