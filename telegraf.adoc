@@ -22,7 +22,7 @@
 
 = DRAFT telegraf installation for FS computers
 E. Himwich, C. Frock, C. Coughlin, K. Imai
-Version 0.9 - August 2021
+Version 1.0 - August 2021
 
 :sectnums:
 
@@ -43,7 +43,7 @@ https://github.com/nvi-inc/telegraf
 With two computers, _telegraf_ should be installed on both _fs1_ and
 _fs2_. The one on _fs1_ is the nominal operational installation. The
 one on _fs2_ collects computer performance information by default.
-However, the _set_telegraf_ utility (see the section
+However, the _set_telegraf_ utility (see the appendix
 <<set_telegraf utility>> below for the details) can be used to make it
 the operational version if needed.
 
@@ -429,7 +429,7 @@ it.
 . Reverify the second step <<no_problems,Verify there are no other
 problems>> in <<Testing telegraf on fs1>>
 
-== set_telegraf utility
+== Installing the set_telegraf utility
 
 You may want to install the _set_telegraf_ script. This script can be
 used by _root_ to change which machine _fs1_ or _fs2_ runs _telegraf_
@@ -437,7 +437,10 @@ for operations (and _gromet_). This works best when _gromet_, instead
 of _metserver_ is used as the server for met. data. You can adjust the
 steps for using _metserver_. Some notes on doing that are provided. If
 you don't want to install _set_telegraf_, skip ahead to the
-<<Restoring RAIDs>> step.
+<<Restoring RAIDs>> step below.
+
+The use of the _set_telegraf_ utility is described in the appendix
+<<set_telegraf utility>>.
 
 === set_telegraf installation
 
@@ -449,7 +452,7 @@ identical. The three differences are **NOTE**d in the steps of
 For the installation steps, use of _gromet_ is assumed. If it is not
 being used, the _set_telegraf_ script on both machines will need to
 have the _gromet_ steps removed or replaced with _metserver_ steps, as
-apprporiate. This is **NOTE**d in the sub-steps.
+appropriate. This is **NOTE**d in the sub-steps.
 
 CAUTION: If _metserver_ is being used, it must have be setup on both
 machines first. Additionally, when switching between machines, the
@@ -465,9 +468,9 @@ NOTE: For installing on _fs2_, these steps are performed on _fs2_.
 
 To install the _set_telegraf_ script, as _root_:
 
-. Place a copy of _set_telegraf_ (a listing is available in the
-appendix <<Listing of set_telegraf script>>) in
-_/usr/local/sbin/set_telegraf_
+. Place a copy of _set_telegraf_ (a pointer to an example file and
+listing of it is available in the appendix <<set_telegraf utility>>)
+in _/usr/local/sbin/set_telegraf_
 
 +
 
@@ -624,7 +627,73 @@ install:
 
 [appendix]
 
-= Listing of set_telegraf script
+= set_telegraf utility
+
+This appendix provides information on the use of the _set_telegraf_
+utility, a pointer to an example version, and a listing of it. These
+points are covered in sub-sections below. Its installation is covered
+in the section <<Installing the set_telegraf utility>> above.
+
+=== Use of set_telegraf
+
+The _set_telegraf_ utility provides a command that can be used to
+switch the configuration of _telegraf_ on the _operational_ and
+_spare_ computer systems. The _telegraf_ configuration on operational
+system is usually the _full_ configuration, collecting data from the
+antenna, FS, datalogger, and met. server, as well as the performance
+data for that computer. The configuration on the spare computer is the
+_partial_ configuration. It only collects the performance data for
+that computer. If for some reason the usual operational disks (_fs1_)
+can't be used (in either the operational or spare computer chassis)
+and spare disks (_fs2_) are pressed into service for operations,
+_set_telegraf_ provides a means to change the telegraf configuration
+on the spare dsks into the operational one, and vice-versa.
+
+NOTE: The node names of the systems are associated with the disks, not
+the computer chassis. Thus if the _fs1_ disks are moved from the usual
+operational computer chassis to the spare computer chassis, then _fs1_
+is running in the spare computer chassis. If the _fs1_ disks are moved
+to the spare chassis, they can still be used for operations, including
+using the full _telegraf_ configuration.
+
+IMPORTANT: It is important that only one _telegraf_ configuration be
+the full one at any given time. As a result, you should always change
+the current full configuration to partial before enabling the full
+configuration on the other computer. If it is not possible to disable
+the current full configuration (for exaample the disks won't boot)
+before enabling the other, the system with the previous full
+configuration should be kept off the network until it has been
+switched to partial. This can be done either be keeping it turned off
+or disconnected from the network.
+
+. To switch the full configuration from _fs1_ to _fs2_:
+
+.. Change the _telegraf_ on the _fs1_ disks to `partial`, as _root_:
+
+   set_telegraf partial
+
+.. Change the _telegraf_ on the _fs2_ disks to `full`, as _root_:
+
+   set_telegraf full
+
+When operations can be restored to the _fs1_ computer, switch the
+systems back:
+
+. To switch the full configuration from _fs2_ to _fs1_:
+
+.. Change the _telegraf_ on the _fs2_ disks to `partial`, as _root_:
+
+   set_telegraf partial
+
+.. Change the _telegraf_ on the _fs1_ disks to `full`, as _root_:
+
+   set_telegraf full
+
+=== set_telegraf script
+
+An example script can be found in the file _set_telegraf_ at:
+https://github.com/nvi-inc/telegraf_install. A listing is provided
+below.
 
 ....
 #!/bin/bash
