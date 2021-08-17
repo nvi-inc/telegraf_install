@@ -22,7 +22,7 @@
 
 = DRAFT telegraf installation for FS computers
 E. Himwich, C. Frock, C. Coughlin, K. Imai
-Version 1.1 - August 2021
+Version 1.2 - August 2021
 
 :sectnums:
 
@@ -218,12 +218,11 @@ the other should be corrected.
 +
 
 CAUTION: The `metserver` (_metserver_ or _gromet_) host in the
-configuration files is by default set to the alias `fs1` (`fs2`
-for _fs2_). If your `metserver` serves to the local network, you
-should change that to the appropriate alias for your computer. If the
-`metserver` is serving only to the local host, it if should be set to
-`127.0.0.1`. If you don't have a `metserver`, you could comment out
-the `metserver` lines.
+configuration files is by default set to the `127.0.0.1` for the case
+of the `metserver` serving to the local host only. If it serves to the
+network, use an alias for _fs1_ (for files on _fs2_, use an alias for
+_fs2_) from _/etc/hosts_ instead. If you don't have a `metserver`, you
+could comment out the `metserver` lines.
 
 ..  Set the _telegraf_ user name and password in
  _/etc/telegraf/telegraf.conf_ (_not_ in the copy in
@@ -682,6 +681,28 @@ or disconnected from the network.
 
    set_telegraf full
 
+.. If _gromet_ (or _metserver_) was serving data to the network
+instead of the local host, then:
+
+... You will need to adjust all other systems that were getting met.
+data from _fs1_ to point to _fs2_ instead.
+
+... If this is the first time you have switched to using `full` on
+_fs2_ since the last _refresh_spare_usr2_, then on _fs2_ you will need
+to:
+
+.... As _oper_, change _/usr2/control/equip.ctl_ to point to _fs2_ for
+the met. data.
+
+.... If you are using _metclient_, you will need to:
+
+..... As _prog_, change the `HOST` in
+_/usr2/st/metclient/metclient_systemd.sh_ to point to _fs2_.
+
+..... As _root_, execute:
+
+    systemctl restart metclient
+
 When operations can be restored to the _fs1_ computer, switch the
 systems back:
 
@@ -694,6 +715,12 @@ systems back:
 .. Change the _telegraf_ on the _fs1_ disks to `full`, as _root_:
 
    set_telegraf full
+
+.. If _gromet_ (or _metserver_) was serving data to the network
+instead of the local host, then:
+
+... You will need to adjust all other systems that were getting met.
+data from _fs2_ to point to _fs1_ instead.
 
 === set_telegraf script
 
@@ -1111,8 +1138,8 @@ address = "12m:502"
 # Query at MET4 meteorological measurement systems via metserver
 [[inputs.met4]]
   ## Address of metserver
-#  address = "127.0.0.1:50001"
-  address = "fs1:50001"
+  address = "127.0.0.1:50001"
+#  address = "fs1:50001"
   ## You can add extra tags, for example
   # [inputs.met4.tags]
   #     location = "..."
@@ -1401,8 +1428,8 @@ ignore_fs = ["tmpfs", "devtmpfs"]
 # Query at MET4 meteorological measurement systems via metserver
 #[[inputs.met4]]
 #  ## Address of metserver
-##  address = "127.0.0.1:50001"
-#  address = "fs1:50001"
+#  address = "127.0.0.1:50001"
+##  address = "fs1:50001"
 #  ## You can add extra tags, for example
 #  # [inputs.met4.tags]
 #  #     location = "..."
@@ -1691,8 +1718,8 @@ address = "12m:502"
 # Query at MET4 meteorological measurement systems via metserver
 [[inputs.met4]]
   ## Address of metserver
-#  address = "127.0.0.1:50001"
-  address = "fs2:50001"
+  address = "127.0.0.1:50001"
+#  address = "fs2:50001"
   ## You can add extra tags, for example
   # [inputs.met4.tags]
   #     location = "..."
@@ -1980,8 +2007,8 @@ ignore_fs = ["tmpfs", "devtmpfs"]
 # Query at MET4 meteorological measurement systems via metserver
 #[[inputs.met4]]
 #  ## Address of metserver
-##  address = "127.0.0.1:50001"
-#  address = "fs2:50001"
+#  address = "127.0.0.1:50001"
+##  address = "fs2:50001"
 #  ## You can add extra tags, for example
 #  # [inputs.met4.tags]
 #  #     location = "..."
