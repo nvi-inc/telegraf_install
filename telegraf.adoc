@@ -22,7 +22,7 @@
 
 = DRAFT telegraf installation for FS computers
 E. Himwich, C. Frock, C. Coughlin, K. Imai
-Version 1.2 - August 2021
+Version 1.3 - August 2021
 
 :sectnums:
 
@@ -190,6 +190,21 @@ of it is provided in the appendix <<fs1 telegraf.conf file>>.
 NOTE: If you are using the directions to install _telegraf_ on _fs2_,
 a pointer an example file for that machine and a listing of it are
 provided in the appendix <<fs2 telegraf.conf file>>.
+
++
+
++
+
+NOTE: If all of the devices covered in the example _telegraf.conf_ file
+are not available for your system, you may want to install an
+abbreviated version. This could be setup to only access the computer
+performance information and, optionally, some sub-set of the other
+devices. You can edit the _telegraf.conf_ file for the features you
+want. The example in the appendix <<fs1 telegraf.conf.partial file>>
+could be used for comparison. It could also be used as is, if its name
+is changed to _telegraf.conf_. You can use the example in
+<<fs2 telegraf.conf.partial file>> for comparison if you are working
+on _fs2_.
 
 . As _root_:
 
