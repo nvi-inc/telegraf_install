@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2021 NVI, Inc.
+// Copyright (c) 2020-2021, 2023 NVI, Inc.
 //
 // This file is part of the FSL10 Linux distribution.
 // (see http://github.com/nvi-inc/fsl10).
@@ -22,7 +22,7 @@
 
 = DRAFT telegraf installation for FS computers
 E. Himwich, C. Frock, C. Coughlin, K. Imai
-Version 1.4 - August 2021
+Version 1.5 - October 2023
 
 :sectnums:
 
@@ -35,19 +35,19 @@ there are both _operational_ and _spare_ computers in use. They are
 referred to as _fs1_ and _fs2_, respectively. You should of course
 replace those with the names of the computers you are using, if
 different. If there is only one computer, you can omit the actions
-involving _fs2_ and not install the _set_telegraf_ utility.
-
-The repository for _telegraf_ can be found at
-https://github.com/nvi-inc/telegraf.
+involving _fs2_ (and not install the _set_telegraf_ utility).
 
 With two computers, _telegraf_ should be installed on both _fs1_ and
 _fs2_. The one on _fs1_ collects data from various devices and the
 computer performance information. It is nominally the operational
 installation. The one on _fs2_ just collects computer performance
-information by default. However, the _set_telegraf_ utility (see the
-appendix <<set_telegraf utility>> below for the details) can be used
-to make it the operational installation so it collects the data from
-the other devices.
+information by default. The _set_telegraf_ utility (see the section
+<<set_telegraf utility>> below for the details) can be used to change
+which system is the operational one and collects the data from the
+devices.
+
+The repository for _telegraf_ can be found at
+https://github.com/nvi-inc/telegraf.
 
 The installation assumes that _gromet_ is used to serve met. data. If
 _metserver_ is being used instead, you should either replace it with
@@ -62,13 +62,13 @@ _gromet_, installing it first or combining it with _telegraf_ is
 described in the <<Combining with gromet installation>> section.
 
 The installation process uses the _recoverable testing_ procedure of
-FSL10 with a RAID to enable easy recovery in case of a problem. This
+FSL11 with a RAID to enable easy recovery in case of a problem. This
 has the advantage that if (i) actions are missing from the _telegraf_
 installation procedure or (ii) errors occur, and either or both can't
 be recovered from directly, it is relatively easy to return to the
 original state and start over. If you are using some other FSL__x__ or
 don't have a RAID, you should skip using the recoverable testing
-procedure and recovery or substitute a different one.
+procedure or substitute a different one.
 
 == Combining with gromet installation
 
@@ -163,28 +163,30 @@ next step, <<Installing telegraf on fs1>>, below.
 
 . Remove any previous installation of _telegraf_.
 
-. As _prog_:
+. As _root_:
 
-.. Create the local configuration directory:
+.. Clone the _telegraf_install_ repository:
 
-   cd /usr2/st
-   mkdir telegraf.conf
+   cd /usr2
+   git clone https://github.com/nvi-inc/telegraf_install.git
+   chown -R prog.rtx telegraf_install
 
-.. Place the _README_ and _telefgraf.conf_ files in the directory.
+.. If not already present, add aliases to _/etc/hosts_ for the
+datalogger as `datalog`; for the MAS, as `mas`; for the 12m antenna,
+as `12m`. If you want to use different aliases you will need to update
+the values used in the configuration file.
+
+.. Execute (copy-and-paste _will_ work for the wrapped second line):
+
+    cd ~
+    wget https://github.com/nvi-inc/telegraf/releases/download/v1.14.2-vlbi-0.5.2/telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
+    dpkg -i telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
+    cp /usr2/telegraf_install/telegraf.conf /etc/telegraf
 
 +
 
-A pointer to an example _README_ file and a listing of it is provided
-in the appendix <<README file>>.
-
-+
-
-+
-
-A pointer to an example _telegraf.conf_ file and a listing
-of it are provided in the appendix <<telegraf.conf file>>.
-
-+
+TIP: For the _cp_ command, you may be prompted to confirm overwriting
+_/etc/telegraf/telegraf.conf_. It should be safe to answer `*y*`.
 
 +
 
@@ -192,29 +194,10 @@ NOTE: If all of the devices covered in the example _telegraf.conf_
 file are not available for your system, you may want to install a
 reduced configuration file. It can be setup to only access the
 computer performance information and, optionally, some sub-set of the
-other devices. You can edit the _telegraf.conf_ file to comment out
-the features you don't want. The example in the appendix
-<<telegraf.conf.partial file>> may be useful for comparison. It could
-also be used as is, if its name is changed to _telegraf.conf_.
-
-. As _root_:
-
-.. If not already present, add aliases to _/etc/hosts_ for the
-datalogger as `datalog`; for the MAS, as `mas`; for the 12m antenna,
-as `12m`. If you want to use different aliases you will need to update
-the values used in the configuration file.
-
-.. Execute (cut-and-paste will work for the wrapped second line):
-
-    cd ~
-    wget https://github.com/nvi-inc/telegraf/releases/download/v1.14.2-vlbi-0.5.2/telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
-    dpkg -i telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
-    cp /usr2/st/telegraf.conf/telegraf.conf /etc/telegraf
-
-+
-
-TIP: For the _cp_ command, you may be prompted to confirm overwriting
-_/etc/telegraf/telegraf.conf_. It should be safe to answer `*y*`.
+other devices. You can edit the _/etc/telegraf/telegraf.conf_ file to
+comment out the features you don't want. The _telegraf.conf.partial_
+file may be useful for comparison. It could also be used as is, if you
+place it in _/etc/telegraf/_ as _telegraf.conf_.
 
 +
 
@@ -236,7 +219,7 @@ If you don't have a `metserver`, you should comment out the
 
 .. Set the _telegraf_ user name and password in
  _/etc/telegraf/telegraf.conf_ (_not_ in the copy in
- _/usr2/st/telegraf.conf_).
+ _/usr2/telegraf_install/telegraf.conf_).
 
 .. Execute:
 
@@ -299,8 +282,8 @@ _gromet_ installation, you should skip this step. Instead proceed to
 the next step,
 <<Changes needed before installing telegraf on fs2>>, below.
 
-Follow the instructions in the <<Preparing fs1>> step above, but
-this time performing them on _fs2_. Then continue with next step,
+Follow the instructions in the <<Preparing fs1>> step above, but this
+time performing them on _fs2_. Then continue with the next step,
 <<Changes needed before installing telegraf on fs2>>, below.
 
 === Changes needed before installing telegraf on fs2
@@ -442,18 +425,16 @@ it.
 . Reverify the second sub-step <<no_problems,Verify there are no other
 problems>> in the <<Testing telegraf on fs1>> step above.
 
-== Installing the set_telegraf utility
+== set_telegraf utility
 
-You may want to install the _set_telegraf_ script. This script can be
-used by _root_ to change which machine _fs1_ or _fs2_ runs _telegraf_
-for operations (and _gromet_). This works best when _gromet_, instead
-of _metserver_ is used as the server for met. data. You can adjust the
+You may want to install the _set_telegraf_ script, which assumes
+`systemd` (not `initd`) is being used. This script can be used by
+_root_ to change which machine, _fs1_ or _fs2_, runs _telegraf_ (and
+_gromet_) for operations. This works best when _gromet_, instead of
+_metserver_, is used as the server for met. data. You can adjust the
 instructions for using _metserver_. Some notes on doing that are
 provided. If you don't want to install _set_telegraf_, skip ahead to
 the <<Restoring RAIDs>> section below.
-
-The use of the _set_telegraf_ utility is described in the appendix
-<<set_telegraf utility>>.
 
 === set_telegraf installation
 
@@ -477,19 +458,21 @@ IMPORTANT: For installing on _fs2_, these instructions are performed
 on _fs2_.
 
 
-. Place a copy of _set_telegraf_ (a pointer to an example file and
-listing of it is available in the appendix <<set_telegraf utility>>)
-in _/usr/local/sbin/set_telegraf_
+. Place a copy of _set_telegraf_ in _/usr/local/sbin_
+
+  cd /usr/local/sbin
+  cp /usr2/telegraf_install/set_telegraf .
 
 +
 
-CAUTION: If _gromet_ is _not_ being used, the _gromet_ lines commented
-out or replaced with _metserver_ lines, as appropriate.
+CAUTION: If _gromet_ is _not_ being used, the _gromet_ lines in
+_/usr/local/sbin/set_telegraf_ will need to be commented-out or
+replaced with _metserver_ lines, as appropriate.
 
 +
 
-CAUTION: If _metclient_ is being used, the _metclient_ lines in the
-script will need to be uncommented.
+CAUTION: If _metclient_ _is_ being used, the _metclient_ lines in
+_/usr/local/sbin/set_telegraf_ will need to be uncommented.
 
 . Set ownerships and permissions:
 
@@ -523,15 +506,15 @@ cd /etc/telegraf
 cp OLD._date_/telegraf.conf telegraf.conf.full
 ....
 
-. Place a copy of the _telegraf.conf.partial_ file (a pointer to an
-example and a listing of it are provided in the appendix
-<<telegraf.conf.partial file>>) in _/etc/telegraf/_.
+. Place a copy of the _telegraf.conf.partial_ in _/etc/telegraf_:
 
+  cd /etc/telegraf
+  cp /usr2/telegraf_install/telegraf.conf.partial .
 +
 
-TIP: You may want to update the address for the _metserver_ in
-_telegraf.conf.partial_ to agree with your _telegraf.conf.full_ to
-ease future changes.
+TIP: You may want to update the (commented-out) address for the
+_metserver_ in _telegraf.conf.partial_ to agree with your
+_telegraf.conf.full_ to ease future changes.
 
 . When working on _fs1_, create the symbolic link:
 
@@ -565,6 +548,9 @@ there, then proceed to the step <<Testing set_telegraf>> below.
 
 The instructions below, alternately disable and enable _telegraf_ from
 collecting antenna data, and met. data if met. devices are being used.
+They assme that gromet (or _metserver_) are serving data to the
+`localhost`. If not, they must be already configured to serve data to
+the local host's name on each machine.
 
 CAUTION: Be careful to enter the command on the machine indicated.
 
@@ -601,627 +587,6 @@ indicated, then the system is checked out and has been returned to the
 operational _telegraf_ being on _fs1_. The _telegraf_ on _fs2_ should
 still be collecting diagnostic information for that computer. This is
 the normal configuration.
-
-== Restoring RAIDs
-
-If everything is still working, follow the _successful_ branch in the
-recoverable test procedure, to recover the RAIDs on both _fs1_ and
-_fs2_ at
-https://nvi-inc.github.io/fsl10/raid.html#_recoverable_testing to:
-
-. Recover the RAID on _fs1_.
-
-. Recover the RAID on _fs2_.
-
-[appendix]
-
-= README file
-
-An example can be found in the file _README_ at
-https://github.com/nvi-inc/telegraf_install. A listing is provided
-below.
-
-....
-install:
-
-  root:
-    cd ~
-    wget https://github.com/nvi-inc/telegraf/releases/download/v1.14.2-vlbi-0.5.2/telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
-    dpkg -i telegraf-vlbi_1.14.2.vlbi.0.5.2-1_amd64.deb
-    mkdir /etc/telegraf
-    cp /usr2/st/telegraf.conf/telegraf.conf /etc/telegraf
-      (you may need to change which FS version is pinned)
-    systemctl restart telegraf
-....
-
-[appendix]
-
-= telegraf.conf file
-
-An example can be found in the file _telegraf.conf_ at
-https://github.com/nvi-inc/telegraf_install. A listing is provided
-below.
-
-....
-# Telegraf Configuration
-#
-# Telegraf is entirely plugin driven. All metrics are gathered from the
-# declared inputs, and sent to the declared outputs.
-#
-# Plugins must be declared in here to be active.
-# To deactivate a plugin, comment out the name and any variables.
-#
-# Use 'telegraf -config telegraf.conf -test' to see what metrics a config
-# file would generate.
-#
-# Environment variables can be used anywhere in this config file, simply surround
-# them with ${}. For strings the variable must be within quotes (ie, "${STR_VAR}"),
-# for numbers and booleans they should be plain (ie, ${INT_VAR}, ${BOOL_VAR})
-
-
-# Global tags can be specified here in key="value" format.
-[global_tags]
-  # dc = "us-east-1" # will tag all metrics with dc=us-east-1
-  # rack = "1a"
-  ## Environment variables can be used as tags, and throughout the config file
-  # user = "$USER"
-
-
-# Configuration for telegraf agent
-[agent]
-  ## Default data collection interval for all inputs
-  interval = "10s"
-  ## Rounds collection interval to 'interval'
-  ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
-  round_interval = true
-
-  ## Telegraf will send metrics to outputs in batches of at most
-  ## metric_batch_size metrics.
-  ## This controls the size of writes that Telegraf sends to output plugins.
-  metric_batch_size = 1000
-
-  ## Maximum number of unwritten metrics per output.
-  metric_buffer_limit = 10000
-
-  ## Collection jitter is used to jitter the collection by a random amount.
-  ## Each plugin will sleep for a random time within jitter before collecting.
-  ## This can be used to avoid many plugins querying things like sysfs at the
-  ## same time, which can have a measurable effect on the system.
-  collection_jitter = "0s"
-
-  ## Default flushing interval for all outputs. Maximum flush_interval will be
-  ## flush_interval + flush_jitter
-  flush_interval = "10s"
-  ## Jitter the flush interval by a random amount. This is primarily to avoid
-  ## large write spikes for users running a large number of telegraf instances.
-  ## ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
-  flush_jitter = "0s"
-
-  ## By default or when set to "0s", precision will be set to the same
-  ## timestamp order as the collection interval, with the maximum being 1s.
-  ##   ie, when interval = "10s", precision will be "1s"
-  ##       when interval = "250ms", precision will be "1ms"
-  ## Precision will NOT be used for service inputs. It is up to each individual
-  ## service input to set the timestamp at the appropriate precision.
-  ## Valid time units are "ns", "us" (or "µs"), "ms", "s".
-  precision = ""
-
-  ## Log at debug level.
-  # debug = true
-  debug = false
-  ## Log only error level messages.
-  quiet = false
-
-  ## Log file name, the empty string means to log to stderr.
-  #logfile = "/tmp/telegraf.log"
-  logfile = ""
-
-  ## The logfile will be rotated after the time interval specified.  When set
-  ## to 0 no time based rotation is performed.
-  # logfile_rotation_interval = "0d"
-
-  ## The logfile will be rotated when it becomes larger than the specified
-  ## size.  When set to 0 no size based rotation is performed.
-  # logfile_rotation_max_size = "0MB"
-
-  ## Maximum number of rotated archives to keep, any older logs are deleted.
-  ## If set to -1, no archives are removed.
-  # logfile_rotation_max_archives = 5
-
-  ## Override default hostname, if empty use os.Hostname()
-  hostname = ""
-  ## If set to true, do no set the "host" tag in the telegraf agent.
-  omit_hostname = false
-
-
-###############################################################################
-#                            OUTPUT PLUGINS                                   #
-###############################################################################
-
-
-# Send telegraf metrics to file(s)
-#[[outputs.file]]
-  ## Files to write to, "stdout" is a specially handled file.
-  # files = ["/tmp/metrics.out"]
-
-  ## The file will be rotated after the time interval specified.  When set
-  ## to 0 no time based rotation is performed.
-  # rotation_interval = "0d"
-
-  ## The logfile will be rotated when it becomes larger than the specified
-  ## size.  When set to 0 no size based rotation is performed.
-  # rotation_max_size = "0MB"
-
-  ## Maximum number of rotated archives to keep, any older logs are deleted.
-  ## If set to -1, no archives are removed.
-  # rotation_max_archives = 5
-
-  ## Data format to output.
-  ## Each data format has its own unique set of configuration options, read
-  ## more about them here:
-  ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_OUTPUT.md
-  # data_format = "influx"
-
-# Configuration for sending metrics to InfluxDB
-[[outputs.influxdb]]
-  ## The full HTTP or UDP URL for your InfluxDB instance.
-  ##
-  ## Multiple URLs can be specified for a single cluster, only ONE of the
-  ## urls will be written to each interval.
-  # urls = ["unix:///var/run/influxdb.sock"]
-  # urls = ["udp://127.0.0.1:8089"]
-  urls = ["http://mas:8086"]
-
-  ## The target database for metrics; will be created as needed.
-  database = "ops"
-
-  ## If true, no CREATE DATABASE queries will be sent.  Set to true when using
-  ## Telegraf with a user without permissions to create databases or when the
-  ## database already exists.
-  skip_database_creation = true
-
-  ## Name of existing retention policy to write to.  Empty string writes to
-  ## the default retention policy.  Only takes effect when using HTTP.
-  # retention_policy = ""
-
-  ## Write consistency (clusters only), can be: "any", "one", "quorum", "all".
-  ## Only takes effect when using HTTP.
-  # write_consistency = "any"
-
-  ## Timeout for HTTP messages.
-  # timeout = "5s"
-
-  ## HTTP Basic Auth
-  # dummy values
-  # username = "something"
-  # password = "something_else"
-    username = "something"
-    password = "something_else"
-
-  ## HTTP User-Agent
-  # user_agent = "telegraf"
-
-  ## UDP payload size is the maximum packet size to send.
-  # udp_payload = "512B"
-
-  ## Optional TLS Config for use on HTTP connections.
-  # tls_ca = "/etc/telegraf/ca.pem"
-  # tls_cert = "/etc/telegraf/cert.pem"
-  # tls_key = "/etc/telegraf/key.pem"
-  ## Use TLS but skip chain & host verification
-  # insecure_skip_verify = false
-
-  ## HTTP Proxy override, if unset values the standard proxy environment
-  ## variables are consulted to determine which proxy, if any, should be used.
-  # http_proxy = "http://corporate.proxy:3128"
-
-  ## Additional HTTP headers
-  # http_headers = {"X-Special-Header" = "Special-Value"}
-
-  ## HTTP Content-Encoding for write request body, can be set to "gzip" to
-  ## compress body or "identity" to apply no encoding.
-  # content_encoding = "identity"
-
-  ## When true, Telegraf will output unsigned integers as unsigned values,
-  ## i.e.: "42u".  You will need a version of InfluxDB supporting unsigned
-  ## integer values.  Enabling this option will result in field type errors if
-  ## existing data has been written.
-  # influx_uint_support = false
-
-
-###############################################################################
-#                            INPUT PLUGINS                                    #
-###############################################################################
-
-# Read metrics about disk usage
-[[inputs.disk]]
-ignore_fs = ["tmpfs", "devtmpfs"]
-
-# Read metrics about disk IO by device
-[[inputs.diskio]]
-  ## By default, telegraf will gather stats for all devices including
-  ## disk partitions.
-  ## Setting devices will restrict the stats to the specified devices.
-  # devices = ["sda", "sdb"]
-  ## Uncomment the following line if you need disk serial numbers.
-  # skip_serial_number = false
-
-
-# Get kernel statistics from /proc/stat
-[[inputs.kernel]]
-  # no configuration
-
-# Get the number of processes and group them by status
-[[inputs.processes]]
-  # no configuration
-
-# Read metrics about swap memory usage
-[[inputs.swap]]
-  # no configuration
-
-# Read metrics about system load & uptime
-[[inputs.system]]
-  # no configuration
-
-# Read metrics about cpu usage
-[[inputs.cpu]]
-  ## Whether to report per-cpu stats or not
-  percpu = true
-  ## Whether to report total system cpu stats or not
-  totalcpu = true
-  ## If true, collect raw CPU time metrics.
-  collect_cpu_time = false
-  ## If true, compute and report the sum of all non-idle CPU states.
-  report_active = false
-
-
-# Query Delphin data logger configured from MGO
-[[inputs.delphin_datalogger]]
-# Address and port of datalogger modbus port
-address = "datalog"
-port = 502
-timeout = "20s"
-slave_id = 1
-
-
-# Read metrics about memory usage
-[[inputs.mem]]
-  # no configuration
-
-
-# Query an antenna controller using modbus over TCP. Registers are assumed to be 32bits wide.
-[[inputs.modbus_antenna]]
-### modbus antenna controller type
-antenna_type = "intertronics12m"
-### network address in form ip:port
-address = "12m:502"
-
-# Query at MET4 meteorological measurement systems via metserver
-[[inputs.met4]]
-  ## Address of metserver
-  address = "127.0.0.1:50001"
-#  address = "fs1:50001"
-  ## You can add extra tags, for example
-  # [inputs.met4.tags]
-  #     location = "..."
-  #     device = "old"
-
-
-###############################################################################
-#                            SERVICE INPUT PLUGINS                            #
-###############################################################################
-
-
-# Poll the Field System state through shared memory.
-[[inputs.fieldsystem]]
-## Poll the Field System state through shared memory.
-##
-## Record RDBE Tsys and Pcal calculated by FS.
-## This complements the rdbe_multicast input.
-rdbe = true
-## Rate to poll FS variables.
-#precision = "100ms"
-version = "10.0.0-beta1"
-....
-
-[appendix]
-
-= telegraf.conf.partial file
-
-An example can be found in the file _telegraf.conf.partial_ at
-https://github.com/nvi-inc/telegraf_install. A listing is provided
-below.
-
-....
-# Telegraf Configuration
-#
-# Telegraf is entirely plugin driven. All metrics are gathered from the
-# declared inputs, and sent to the declared outputs.
-#
-# Plugins must be declared in here to be active.
-# To deactivate a plugin, comment out the name and any variables.
-#
-# Use 'telegraf -config telegraf.conf -test' to see what metrics a config
-# file would generate.
-#
-# Environment variables can be used anywhere in this config file, simply surround
-# them with ${}. For strings the variable must be within quotes (ie, "${STR_VAR}"),
-# for numbers and booleans they should be plain (ie, ${INT_VAR}, ${BOOL_VAR})
-
-
-# Global tags can be specified here in key="value" format.
-[global_tags]
-  # dc = "us-east-1" # will tag all metrics with dc=us-east-1
-  # rack = "1a"
-  ## Environment variables can be used as tags, and throughout the config file
-  # user = "$USER"
-
-
-# Configuration for telegraf agent
-[agent]
-  ## Default data collection interval for all inputs
-  interval = "10s"
-  ## Rounds collection interval to 'interval'
-  ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
-  round_interval = true
-
-  ## Telegraf will send metrics to outputs in batches of at most
-  ## metric_batch_size metrics.
-  ## This controls the size of writes that Telegraf sends to output plugins.
-  metric_batch_size = 1000
-
-  ## Maximum number of unwritten metrics per output.
-  metric_buffer_limit = 10000
-
-  ## Collection jitter is used to jitter the collection by a random amount.
-  ## Each plugin will sleep for a random time within jitter before collecting.
-  ## This can be used to avoid many plugins querying things like sysfs at the
-  ## same time, which can have a measurable effect on the system.
-  collection_jitter = "0s"
-
-  ## Default flushing interval for all outputs. Maximum flush_interval will be
-  ## flush_interval + flush_jitter
-  flush_interval = "10s"
-  ## Jitter the flush interval by a random amount. This is primarily to avoid
-  ## large write spikes for users running a large number of telegraf instances.
-  ## ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
-  flush_jitter = "0s"
-
-  ## By default or when set to "0s", precision will be set to the same
-  ## timestamp order as the collection interval, with the maximum being 1s.
-  ##   ie, when interval = "10s", precision will be "1s"
-  ##       when interval = "250ms", precision will be "1ms"
-  ## Precision will NOT be used for service inputs. It is up to each individual
-  ## service input to set the timestamp at the appropriate precision.
-  ## Valid time units are "ns", "us" (or "µs"), "ms", "s".
-  precision = ""
-
-  ## Log at debug level.
-  # debug = true
-  debug = false
-  ## Log only error level messages.
-  quiet = false
-
-  ## Log file name, the empty string means to log to stderr.
-  #logfile = "/tmp/telegraf.log"
-  logfile = ""
-
-  ## The logfile will be rotated after the time interval specified.  When set
-  ## to 0 no time based rotation is performed.
-  # logfile_rotation_interval = "0d"
-
-  ## The logfile will be rotated when it becomes larger than the specified
-  ## size.  When set to 0 no size based rotation is performed.
-  # logfile_rotation_max_size = "0MB"
-
-  ## Maximum number of rotated archives to keep, any older logs are deleted.
-  ## If set to -1, no archives are removed.
-  # logfile_rotation_max_archives = 5
-
-  ## Override default hostname, if empty use os.Hostname()
-  hostname = ""
-  ## If set to true, do no set the "host" tag in the telegraf agent.
-  omit_hostname = false
-
-
-###############################################################################
-#                            OUTPUT PLUGINS                                   #
-###############################################################################
-
-
-# Send telegraf metrics to file(s)
-#[[outputs.file]]
-  ## Files to write to, "stdout" is a specially handled file.
-  # files = ["/tmp/metrics.out"]
-
-  ## The file will be rotated after the time interval specified.  When set
-  ## to 0 no time based rotation is performed.
-  # rotation_interval = "0d"
-
-  ## The logfile will be rotated when it becomes larger than the specified
-  ## size.  When set to 0 no size based rotation is performed.
-  # rotation_max_size = "0MB"
-
-  ## Maximum number of rotated archives to keep, any older logs are deleted.
-  ## If set to -1, no archives are removed.
-  # rotation_max_archives = 5
-
-  ## Data format to output.
-  ## Each data format has its own unique set of configuration options, read
-  ## more about them here:
-  ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_OUTPUT.md
-  # data_format = "influx"
-
-# Configuration for sending metrics to InfluxDB
-[[outputs.influxdb]]
-  ## The full HTTP or UDP URL for your InfluxDB instance.
-  ##
-  ## Multiple URLs can be specified for a single cluster, only ONE of the
-  ## urls will be written to each interval.
-  # urls = ["unix:///var/run/influxdb.sock"]
-  # urls = ["udp://127.0.0.1:8089"]
-  urls = ["http://mas:8086"]
-
-  ## The target database for metrics; will be created as needed.
-  database = "ops"
-
-  ## If true, no CREATE DATABASE queries will be sent.  Set to true when using
-  ## Telegraf with a user without permissions to create databases or when the
-  ## database already exists.
-  skip_database_creation = true
-
-  ## Name of existing retention policy to write to.  Empty string writes to
-  ## the default retention policy.  Only takes effect when using HTTP.
-  # retention_policy = ""
-
-  ## Write consistency (clusters only), can be: "any", "one", "quorum", "all".
-  ## Only takes effect when using HTTP.
-  # write_consistency = "any"
-
-  ## Timeout for HTTP messages.
-  # timeout = "5s"
-
-  ## HTTP Basic Auth
-  # dummy values
-  # username = "something"
-  # password = "something_else"
-    username = "something"
-    password = "something_else"
-
-  ## HTTP User-Agent
-  # user_agent = "telegraf"
-
-  ## UDP payload size is the maximum packet size to send.
-  # udp_payload = "512B"
-
-  ## Optional TLS Config for use on HTTP connections.
-  # tls_ca = "/etc/telegraf/ca.pem"
-  # tls_cert = "/etc/telegraf/cert.pem"
-  # tls_key = "/etc/telegraf/key.pem"
-  ## Use TLS but skip chain & host verification
-  # insecure_skip_verify = false
-
-  ## HTTP Proxy override, if unset values the standard proxy environment
-  ## variables are consulted to determine which proxy, if any, should be used.
-  # http_proxy = "http://corporate.proxy:3128"
-
-  ## Additional HTTP headers
-  # http_headers = {"X-Special-Header" = "Special-Value"}
-
-  ## HTTP Content-Encoding for write request body, can be set to "gzip" to
-  ## compress body or "identity" to apply no encoding.
-  # content_encoding = "identity"
-
-  ## When true, Telegraf will output unsigned integers as unsigned values,
-  ## i.e.: "42u".  You will need a version of InfluxDB supporting unsigned
-  ## integer values.  Enabling this option will result in field type errors if
-  ## existing data has been written.
-  # influx_uint_support = false
-
-
-###############################################################################
-#                            INPUT PLUGINS                                    #
-###############################################################################
-
-# Read metrics about disk usage
-[[inputs.disk]]
-ignore_fs = ["tmpfs", "devtmpfs"]
-
-# Read metrics about disk IO by device
-[[inputs.diskio]]
-  ## By default, telegraf will gather stats for all devices including
-  ## disk partitions.
-  ## Setting devices will restrict the stats to the specified devices.
-  # devices = ["sda", "sdb"]
-  ## Uncomment the following line if you need disk serial numbers.
-  # skip_serial_number = false
-
-
-# Get kernel statistics from /proc/stat
-[[inputs.kernel]]
-  # no configuration
-
-# Get the number of processes and group them by status
-[[inputs.processes]]
-  # no configuration
-
-# Read metrics about swap memory usage
-[[inputs.swap]]
-  # no configuration
-
-# Read metrics about system load & uptime
-[[inputs.system]]
-  # no configuration
-
-# Read metrics about cpu usage
-[[inputs.cpu]]
-  ## Whether to report per-cpu stats or not
-  percpu = true
-  ## Whether to report total system cpu stats or not
-  totalcpu = true
-  ## If true, collect raw CPU time metrics.
-  collect_cpu_time = false
-  ## If true, compute and report the sum of all non-idle CPU states.
-  report_active = false
-
-
-# Query Delphin data logger configured from MGO
-#[[inputs.delphin_datalogger]]
-# Address and port of datalogger modbus port
-#address = "datalog"
-#port = 502
-#timeout = "20s"
-#slave_id = 1
-
-
-# Read metrics about memory usage
-[[inputs.mem]]
-  # no configuration
-
-
-# Query an antenna controller using modbus over TCP. Registers are assumed to be 32bits wide.
-#[[inputs.modbus_antenna]]
-### modbus antenna controller type
-#antenna_type = "intertronics12m"
-### network address in form ip:port
-#address = "12m:502"
-
-# Query at MET4 meteorological measurement systems via metserver
-#[[inputs.met4]]
-#  ## Address of metserver
-#  address = "127.0.0.1:50001"
-##  address = "fs1:50001"
-#  ## You can add extra tags, for example
-#  # [inputs.met4.tags]
-#  #     location = "..."
-#  #     device = "old"
-
-
-###############################################################################
-#                            SERVICE INPUT PLUGINS                            #
-###############################################################################
-
-
-# Poll the Field System state through shared memory.
-#[[inputs.fieldsystem]]
-## Poll the Field System state through shared memory.
-##
-## Record RDBE Tsys and Pcal calculated by FS.
-## This complements the rdbe_multicast input.
-#rdbe = true
-## Rate to poll FS variables.
-#precision = "100ms"
-#version = "10.0.0-beta1"
-....
-
-[appendix]
-
-= set_telegraf utility
-
-This appendix provides information on the use of the _set_telegraf_
-utility, a pointer to an example version, and a listing of it. These
-points are covered in sub-sections below. Its installation is covered
-in the section <<Installing the set_telegraf utility>> above.
 
 === Use of set_telegraf
 
@@ -1266,7 +631,7 @@ or disconnected from the network.
    set_telegraf full
 
 .. If _gromet_ (or _metserver_) was serving data to the network
-instead of the local host, then:
+instead of `localhost`, then:
 
 ... If this is the first time you have switched to using `full` on
 _fs2_ since the last _refresh_spare_usr2_, then on _fs2_ you will need
@@ -1275,12 +640,17 @@ to:
 .... As _oper_, change _/usr2/control/equip.ctl_ to point to _fs2_ for
 the met. data.
 
-.... If you are using _metclient_, you will need to:
+... If you are using _metclient_, then you will need to make sure
+`HOST` in _/usr/local/sbin/metclient/metclient_systemd.sh_ points to
+_fs2_.
 
-..... As _prog_, change the `HOST` in
-_/usr2/st/metclient/metclient_systemd.sh_ to point to _fs2_.
++
 
-..... As _root_, execute:
++
+
++
+
+If not, then as _root_, fix it and then execute:
 
     systemctl restart metclient
 
@@ -1301,158 +671,18 @@ systems back:
    set_telegraf full
 
 .. If _gromet_ (or _metserver_) was serving data to the network
-instead of the local host, then:
+instead of `localhost`, then:
 
 ... You will need to adjust all other systems that were getting met.
 data from _fs2_ to point to _fs1_ instead.
 
-=== set_telegraf script
+== Restoring RAIDs
 
-An example script can be found in the file _set_telegraf_ at
-https://github.com/nvi-inc/telegraf_install. A listing is provided
-below.
+If everything is still working, follow the _successful_ branch in the
+recoverable test procedure, to recover the RAIDs on both _fs1_ and
+_fs2_ at
+https://nvi-inc.github.io/fsl11/raid.html#_recoverable_testing to:
 
-....
-#!/bin/bash
-set -e
+. Recover the RAID on _fs1_.
 
-usage() {
-cat <<EOF
-
-  Usage: `basename "$0"` [options] command
-  Configure 12m FS computer telegraf/gromet
-
-  command is full or partial
-
-  if no command then current state is shown.
-
-  Options:
-   -f   force change if state is unknown or already in that state
-        (use with care, may cause problems)
-   -h   print this message
-EOF
-}
-
-if ! [ $(id -u) = 0 ]; then
-  echo "This script must be run as root."
-  exit 1
-fi
-
-file=$(readlink -f /etc/telegraf/telegraf.conf)
-if [[ "$file" =~ ^/etc/telegraf/telegraf.conf.full$ ]]; then
-   state=full
-elif [[ "$file" =~ ^/etc/telegraf/telegraf.conf.partial$ ]]; then
-   state=partial
-else
-   state=unknown
-fi
-
-force=
-while getopts 'fh' opt; do
-    case $opt in
-        f)
-            force=1
-            ;;
-        h)
-            usage
-            exit 0
-            ;;
-        *)
-            usage
-            exit 1
-            ;;
-    esac
-done
-shift $((OPTIND - 1))
-
-if [[ $# -eq 0 ]] ; then
-    echo "state is $state"
-    exit 0
-fi
-
-cmd=$1
-
-if [[ ! "$cmd" =~ ^(full|partial)$ ]]; then
-   echo "command must be full or partial, was: $cmd"
-   exit 1
-fi
-
-if [[ "$state" =~ "$cmd" ]]; then
-    if [[ -z "$force" ]] ; then
-        echo "already in $state, use -f to force recommanding"
-        exit 1
-     fi
-fi
-
-if [[ "$state" =~ "unknown" ]]; then
-    if [[ -z "$force" ]] ; then
-         echo "Can't change unknown state without -f"
-         exit 1
-    fi
-fi
-
-
-if [[ "$cmd" =~ ^full$ ]]; then
-    echo -n "  Did you set the other computer to partial first? (y=yes, n=no) : "
-    badans=true
-    while [ "$badans" = "true" ]
-    do
-      read ans
-      case "$ans" in
-        y|yes) echo "  O.K. Setting to full ... "
-               badans=false
-               ;;
-        n|no)  echo "  Please do that first."
-               exit
-               ;;
-        *)     echo -n "  Please answer with y=yes or n=no : "
-      esac
-    done
-
-    echo "  Starting gromet"
-    systemctl start gromet
-
-    echo "  Enabling gromet"
-    systemctl enable gromet
-
-#    echo "  Starting metclient"
-#    systemctl start metclient
-
-#    echo "  Enabling metclient"
-#    systemctl enable metclient
-
-    echo "  Changing directory to /etc/telegraf"
-    cd /etc/telegraf
-
-    echo "  Linking telegraf.conf to telegraf.conf.full"
-    ln -sfn telegraf.conf.full telegraf.conf
-
-    echo "  Restarting telegraf"
-    systemctl restart telegraf
-else
-    echo "  Setting to partial ..."
-
-#    echo "  Stopping metclient"
-#    systemctl stop metclient
-
-#    echo "  Disabling metclient"
-#    systemctl disable metclient
-
-    echo "  Stopping gromet"
-    systemctl stop gromet
-
-    echo "  Disabling gromet"
-    systemctl disable gromet
-
-    echo "  Changing directory to /etc/telegraf"
-    cd /etc/telegraf
-
-    echo "  Linking telegraf.conf to telegraf.conf.partial"
-    ln -fsn telegraf.conf.partial telegraf.conf
-
-    echo "  Restarting telegraf"
-    systemctl restart telegraf
-fi
-
-echo "  Done."
-....
+. Recover the RAID on _fs2_.
