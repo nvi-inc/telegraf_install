@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2021, 2023 NVI, Inc.
+// Copyright (c) 2020-2021, 2023-2024 NVI, Inc.
 //
 // This file is part of the FSL10 Linux distribution.
 // (see http://github.com/nvi-inc/fsl10).
@@ -22,12 +22,14 @@
 
 = DRAFT telegraf installation for FS computers
 E. Himwich, C. Frock, C. Coughlin, K. Imai
-Version 1.5 - October 2023
+Version 1.6 - January 2024
 
 :sectnums:
 
 :toc:
 == Introduction
+
+IMPORTANT: #As of FSL11, this document is obsolete.#
 
 This document provides instructions for installing _telegraf_ (a
 collector for the MAS) for Field System computers. It assumes that
